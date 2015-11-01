@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <title>Mountain Car</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.17/p5.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/p5.js/0.4.17/addons/p5.dom.min.js"></script>
+        <script src="js/convnetjs/convnet.js"></script>
+        <script src="js/convnetjs/util.js"></script>
+        <script src="js/convnetjs/deepqlearn.js"></script>
+        <script src="js/cmac.js"></script>
+        <script src="js/agent.js"></script>
+        <script src="js/mountaincar.js"></script>
+    </head>
+    <body>
+        <h1>Mountain Car</h1>
+        <p>
+            You can see total steps in the debug console.<br />
+            Using <a href="http://p5js.org/">p5.js</a>, Sarsa/Q-learning and CMAC (tile coding) ported from
+            <a href="https://github.com/stober/cmac">Jeremy Stober's python implementation</a>.
+            <br />
+            I also tried <a href="https://github.com/karpathy/convnetjs">ConvNetJS</a> and
+            <a href="http://cs.stanford.edu/people/karpathy/convnetjs/demo/rldemo.html">DQN implementation</a> but couldn't find appropriate settings yet.
+            Please see <a href="https://github.com/buhii/mountaincar.js">the Github repository</a>
+        </p>
+    </body>
+</html>
