@@ -1,8 +1,10 @@
 /**
- * MountainCar.js
- *
+ * mountaincar.js
  *   A simple test bed for reinforcement learning
  *   https://en.wikipedia.org/wiki/Mountain_Car
+ *
+ * Copyright (C) 2015, Takahiro Kamatani
+ * Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
  */
 
 function createClamp(min, max) {
