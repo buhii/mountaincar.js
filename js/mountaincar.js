@@ -1,10 +1,8 @@
 /**
- * mountaincar.js
+ * MountainCar.js
+ *
  *   A simple test bed for reinforcement learning
  *   https://en.wikipedia.org/wiki/Mountain_Car
- *
- * Copyright (C) 2015, Takahiro Kamatani
- * Licensed under the MIT (http://www.opensource.org/licenses/mit-license.php) license.
  */
 
 function createClamp(min, max) {
@@ -15,6 +13,7 @@ function createClamp(min, max) {
     });
 }
 
+var totalSteps = []
 
 function MountainCar(opt) {
     this.position = -0.5;
@@ -29,7 +28,7 @@ function MountainCar(opt) {
     this.step = 0;
 
     this.width = opt.width || 640;
-    this.height = opt.height || 480;
+    this.height = opt.height || 360;
 
     this.region = opt.region || {x: [0, this.width], y: [0, this.height]};
     this.region.y = [this.region.y[1], this.region.y[0]];
@@ -40,10 +39,14 @@ function MountainCar(opt) {
             (y - this.region.y[0]) / (this.region.y[1] - this.region.y[0]) * this.height
         ];
     };
-
-    createCanvas(this.width, this.height);
 }
 MountainCar.prototype = {
+    createCanvas: function(parent) {
+        var canvas = createCanvas(this.width, this.height);
+        if (parent !== undefined) {
+            canvas.parent(parent);
+        }
+    },
     vertex: function(x, y) {
         var translated = this.region2px([x, y])
         vertex(translated[0], translated[1]);
@@ -75,10 +78,13 @@ MountainCar.prototype = {
     calcReward: function() {
         return (-1.0 + this.getHeight(this.position)) * 0.5;
 
+        /*
+        // Another reward function which didn't work in this example
         if (this.hasReached()) {
             return 0;
         }
         return -1;
+        */
     },
     hasReached: function() {
         return (this.position >= 0.6);
@@ -91,6 +97,7 @@ MountainCar.prototype = {
         var carCoord = this.region2px([this.position, this.getHeight(this.position)]);
         var carSlope = this.getSlope(this.position);
         this.drawCuteCar(carCoord, carSlope);
+        this.drawTotalSteps();
     },
     drawNiceHill: function() {
         noStroke();
@@ -171,6 +178,42 @@ MountainCar.prototype = {
         rotate(0);
         pop();
     },
+    addTotalStep: function(totalStep) {
+        totalSteps.push(totalStep);
+    },
+    drawTotalSteps: function() {
+        var maxStep = 5000;
+
+        // text
+        noStroke();
+        fill(255);
+        text("0", 449, 343);
+        text(maxStep, 429, 266);
+
+        // graph
+        var graphWidth = 160, graphHeight = 80;
+        var getY = function(value) {
+            var result = graphHeight - value * graphHeight / maxStep;
+            if (result < 0) {
+                result = 0;
+            }
+            return result;
+        };
+
+        push();
+        translate(460, 260);
+        fill(255, 255, 255, 180);
+        rect(0, 0, graphWidth, graphHeight);
+
+        noFill();
+        stroke(0, 0, 255, 255);
+        beginShape();
+        for (var i = 0; i < totalSteps.length; i++) {
+            vertex(i * 2, getY(totalSteps[i]));
+        }
+        endShape();
+        pop();
+    },
 }
 
 
@@ -194,7 +237,7 @@ function prepareTileCodingBrain() {
         alpha: 0.8,
 
         // CMAC settings
-        nlevels: 32,
+        nlevels: 48,
         quantization: 0.001,
 
         algorithm: Agent.Sarsa,
@@ -265,36 +308,50 @@ function tick() {
 
     // check state
     if (env.hasReached()) {
-        console.log("Total steps:", env.step, "\n");
+        console.log("Total steps: ", env.step, "\n");
+
+        if (totalSteps.length > 80) {
+            totalSteps.shift();
+        }
+        totalSteps.push(env.step);
         reset();
     }
+
+    /*
+    // reset
     if (env.step > 5000) {
         console.log("Total steps > 5000: reset.\n");
         reset();
     }
+    */
 
     brain.backward(reward);
 }
 
 
-var frameSlider, epsilonSlider;
+var frameSlider, epsilonSlider, alphaSlider;
 
 function setup() {
     reset();
+    env.createCanvas("p5");
 
     //brain = prepareDQNBrain();   // [FIXME] I couldn't find appropriate DQN settings...
     brain = prepareTileCodingBrain();
 
     frameSlider = createSlider(1, 500, 10);
-    frameSlider.position(135, 160);
+    frameSlider.position(135, 20);
 
-    epsilonSlider = createSlider(0, 100, 5);
-    epsilonSlider.position(135, 190);
+    epsilonSlider = createSlider(0, 100, 5);   // 5 / 100. = 0.05
+    epsilonSlider.position(135, 45);
+
+    alphaSlider = createSlider(0, 100, 70);    // 70 / 100. = 0.70
+    alphaSlider.position(135, 70);
 }
 
 function draw() {
     // agent's epsilon value
     brain.epsilon = epsilonSlider.value() / 100;
+    brain.alpha = alphaSlider.value() / 100;
 
     // go!
     for (var i = 0; i <= frameSlider.value(); i++) {
@@ -304,9 +361,16 @@ function draw() {
     // draw
     env.draw();
 
+    // steps
+    textSize(18);
     noStroke();
-    fill(0);
+    fill(255);
+    text("step: " + env.step, 20, 340);
+
+    // sliders
     textSize(15);
-    text("Draw steps: " + frameSlider.value(), 15, 25);
-    text("epsilon: " + epsilonSlider.value() / 100, 15, 55);
+    fill(0);
+    text("Draw steps: " + frameSlider.value(), 15, 28);
+    text("epsilon: " + epsilonSlider.value() / 100, 15, 52);
+    text("alpha: " + alphaSlider.value() / 100, 15, 75);
 }
