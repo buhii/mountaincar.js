@@ -322,6 +322,7 @@ function tick() {
     // reset
     if (env.step > 5000) {
         console.log("Total steps > 5000: reset.\n");
+        totalSteps.push(env.step);
         reset();
     }
 
